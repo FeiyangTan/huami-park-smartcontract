@@ -6,10 +6,12 @@ pragma solidity ^0.8.0;
  *Feiyang Tan
  */
 
-import "token/ERC20/IERC20.sol";
-//import "github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
+import "Token/ERC20/ERC20.sol";
+import "Token/ERC721/ExERC721.sol";
+import "Token/ERC721/IERC721.sol";
 import "AdminManage.sol";
 import "GrgData.sol";
+//import "ExERC721.sol";
 
 //发布新的组织（客户）合约
 contract OrgContract is adminManage, grgData{
@@ -34,7 +36,17 @@ contract OrgContract is adminManage, grgData{
         _maxAdminNum = maxAdminNum;
         
         //添加新管理员
-        addAdmin(0,initialAdminName,adminAddress);
+        //添加新管理员
+        //检查现有管理员数量是否已满
+        require(_adminNum < _maxAdminNum,"reached maximum amount of admins");
+        //生成新admin结构体
+        Admin memory newAdmin = Admin(0,initialAdminName,adminAddress);
+        //入盘
+        _adminList[0]=(newAdmin);
+        _adminNum++;
+        //生成更新管理员事件
+        emit AddAdmin(0,initialAdminName,adminAddress);
+        
         //更新grg管理合约地址
         _grgDataAddress = grgAddress_;
         //更新本机构的ID
@@ -42,25 +54,26 @@ contract OrgContract is adminManage, grgData{
     }
 
     //发布新ERC20资产
-    // function addERC20(string memory name, string memory symbol, uint totalsupply, uint8 decimal) public onlyAdmin orgState{
-    //     //
-    //     ERC20 newERC20 = new ERC20(name,symbol,totalsupply, decimal);
-    //     Asset memory newAsset = Asset(ERC20AssetList.length, address(newERC20));
-    //     ERC20AssetList.push(newAsset);
-    // }
-    function addERC20(address tokenAddress_) public onlyAdmin orgState{
+    function addERC20(address tokenAddress_, address ExERC20Address_) public onlyAdmin orgState{
         //
+        require(ExERC20(ExERC20Address_)._oranizationAddress() == address(this),"invalid token");
+        require(ExERC20(ExERC20Address_)._ERC20Address() == tokenAddress_,"invalid token");
         Asset memory newAsset = Asset(ERC20AssetList.length, tokenAddress_);
         ERC20AssetList.push(newAsset);
     }
+    // function addERC20(address tokenAddress_) public onlyAdmin orgState{
+    //     //
+    //     Asset memory newAsset = Asset(ERC20AssetList.length, tokenAddress_);
+    //     ERC20AssetList.push(newAsset);
+    // }
 
     //ERC20资产转账
-    // function ERC20Transfer(uint tokenContractID, address recipient, uint amount) public onlyAdmin orgState{
-    //     ERC20(ERC20AssetList[tokenContractID].assetAddress).transfer(recipient,amount);
-    // }
     function ERC20Transfer(uint tokenContractID, address recipient, uint amount) public onlyAdmin orgState{
-        IERC20(ERC20AssetList[tokenContractID].assetAddress).transfer(recipient,amount);
+        ERC20(ERC20AssetList[tokenContractID].assetAddress).transfer(recipient,amount);
     }
+    // function ERC20Transfer(uint tokenContractID, address recipient, uint amount) public onlyAdmin orgState{
+    //     IERC20(ERC20AssetList[tokenContractID].assetAddress).transfer(recipient,amount);
+    // }
 
     //ERC20红包发送
     //function ERC20HBSent(address[] recipientList, uint8 recipientNum) public{
@@ -74,13 +87,18 @@ contract OrgContract is adminManage, grgData{
     //     Asset memory newAsset = Asset(ERC20AssetList.length, address(newERC721));
     //     ERC20AssetList.push(newAsset);
     // }
+    function addERC721(address tokenAddress_, address ExERC721Address_) public onlyAdmin orgState{
+        require(ExERC721(ExERC721Address_)._oranizationAddress() == address(this),"invalid token");
+        require(ExERC721(ExERC721Address_)._ERC271Address() == tokenAddress_,"invalid token");
+        Asset memory newAsset = Asset(ERC20AssetList.length, tokenAddress_);
+        ERC20AssetList.push(newAsset);
+    }
     
     
-    //
-    // function ECR721Mind(uint tokenContractID, uint tokenID, uint startDate, uint expireDare, string memory username, address to) public onlyAdmin orgState{
-    //     IERC721(ERC721AssetList[tokenContractID].assetAddress).mind(tokenID,startDate,expireDare,username,to);
+    function ECR721Mind(uint tokenContractID, uint tokenID, uint startDate, uint expireDare, string memory username, address to) public onlyAdmin orgState{
+        IERC721(ERC721AssetList[tokenContractID].assetAddress).mind(tokenID,startDate,expireDare,username,to);
         
-    // }
+    }
 
     //检测grg管理合约中机构状态
     modifier orgState{

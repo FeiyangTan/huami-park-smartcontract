@@ -10,7 +10,7 @@ pragma solidity ^0.8.0;
 contract adminManage{
 
     //admin列表
-    Admin[] public _adminList;
+    mapping(uint => Admin) internal _adminList;
     
     //允许最多的admin数量，
     uint8 public _maxAdminNum;
@@ -41,6 +41,11 @@ contract adminManage{
         require(_adminNum < _maxAdminNum,"reached maximum amount of admins");
         //检查此adminID是否被占用
         require(_adminList[adminId_].adminAddress==address(0),"invalid adminID, this ID has already been occupied");
+        
+        require(adminAddress_!=address(0),"can't use address(0) as admin address");
+        for(uint8 i;i<_maxAdminNum;i++){
+            require(_adminList[i].adminAddress!=adminAddress_,"invalid adminAddress_, this address alreadyUsed");
+        }
         //生成新admin结构体
         Admin memory newAdmin = Admin(adminId_,adminName_,adminAddress_);
         //入盘
@@ -60,12 +65,13 @@ contract adminManage{
         emit DelAdmin(adminId_,_adminList[adminId_].name,_adminList[adminId_].adminAddress);
         //删除管理员
         delete _adminList[adminId_]; 
+        _adminNum--;
     }
 
     //仅admin
     modifier onlyAdmin(){
         bool ifAdmin;
-        for(uint i =0; i<_adminList.length; i++){
+        for(uint i =0; i<_maxAdminNum; i++){
             if (_adminList[i].adminAddress == msg.sender){
                 ifAdmin = true;
             }

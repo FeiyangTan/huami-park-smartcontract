@@ -24,7 +24,8 @@ contract grgData{
     enum OrgState{valid, frozen, invalid}
     
     //组织列表
-    Organization[] public _orgList;
+    mapping(uint => Organization) public _orgList;
     //
-    OrgState[] public _orgState;
+    mapping(uint => OrgState) public _orgState;
+    uint _orgNum;
 }

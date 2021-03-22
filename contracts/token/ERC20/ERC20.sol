@@ -7,6 +7,7 @@ import "./extensions/IERC20Metadata.sol";
 import "../../utils/Context.sol";
 import "./hb.sol";
 
+import "./ExERC20.sol";
 /**
  * @dev Implementation of the {IERC20} interface.
  *
@@ -43,6 +44,8 @@ contract ERC20 is Context, IERC20, IERC20Metadata,hb {
     //取消默认小数点为18的设置
     uint8 private _decimals;
 
+
+    address _exDataAddress;
     /**
      * @dev Sets the values for {name} and {symbol}.
      *
@@ -52,14 +55,17 @@ contract ERC20 is Context, IERC20, IERC20Metadata,hb {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name_, string memory symbol_, uint totalsupply, uint8 decimals_) {
+    constructor (string memory name_, string memory symbol_, uint totalsupply, uint8 decimals_, address oranizationAddress_) {
         _name = name_;
         _symbol = symbol_;
         //设置小数点
         require(decimals_<19,"deciaml must smaller or equals to 18");
         _decimals = decimals_;
         //
-        _mint(msg.sender, totalsupply*10**decimals_);
+        _mint(oranizationAddress_, totalsupply*10**decimals_);
+        
+        ExERC20 newExERC20 = new ExERC20(oranizationAddress_,address(this));
+        _exDataAddress = address(newExERC20);
     }
 
     /**
